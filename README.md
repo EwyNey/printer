@@ -3,7 +3,7 @@
 Usage:
     python timeline_to_html.py input.txt [output.html]
 
-Input format (CSV):
+Input format:
     start_us,end_us,thread_id,args[,color]
 
 - start_us, end_us: integers (microseconds)
