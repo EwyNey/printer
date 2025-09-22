@@ -254,11 +254,40 @@ svg {{ border: 1px solid #ddd; background: #fff; }}
             fill = item["fill"]
             tid = html.escape(item["thread"]).replace(" ","_")
             # attach data attributes for thread id: we'll map to block by computing block boundaries in JS
-            html_parts.append(f'<rect class="task-rect task" x="{x}" y="{y}" width="{w}" height="{h}" fill="{fill}" data-thread="{html.escape(item["thread"])}" data-start="{item["start"]}" data-end="{item["end"]}" data-args="{html.escape(item["args"])}" />')
-            # short text label if width allows
-            label = html.escape(item["args"][:30])
-            if w > 40:
-                html_parts.append(f'<text x="{x+4}" y="{y+h*0.7}" class="task-label" style="font-size:11px">{label}</text>')
+            html_parts.append(
+                f'<rect class="task-rect task" x="{x}" y="{y}" width="{w}" height="{h}" fill="{fill}" '
+                f'data-thread="{html.escape(item["thread"])}" data-start="{item["start"]}" data-end="{item["end"]}" '
+                f'data-args="{html.escape(item["args"])}" />'
+            )
+
+            # --- Ensure label text fits inside rectangle: truncate with ellipsis if needed ---
+            # avg pixel width per character at font-size:11px — tune this if you change font-size.
+            avg_char_px = 7.0
+            pad_left = 4   # left padding inside rect
+            pad_right = 4  # right padding inside rect
+            available_px = max(0, w - pad_left - pad_right)
+            max_chars = int(available_px / avg_char_px)
+
+            raw_label = str(item["args"] or "")
+            # trim whitespace and single-line
+            raw_label = raw_label.replace("\\n", " ").strip()
+            if len(raw_label) > max_chars and max_chars > 0:
+                # leave room for ellipsis char
+                if max_chars <= 1:
+                    disp_label = "…"
+                else:
+                    disp_label = html.escape(raw_label[:max_chars-1]) + "…"
+            else:
+                disp_label = html.escape(raw_label)
+
+            # draw text only if it fits at least a few pixels
+            if available_px >= 6:
+                # disable pointer events on label so hover remains on rect
+                html_parts.append(
+                    f'<text x="{x + pad_left}" y="{y + h*0.7}" class="task-label" style="font-size:11px; pointer-events:none; dominant-baseline:middle; text-anchor:start; white-space:pre;">{disp_label}</text>'
+                )
+
+            
     # close svg
     html_parts.append("</svg>")
     # tooltip div
