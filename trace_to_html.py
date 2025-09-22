@@ -22,8 +22,8 @@ def parse_input(path):
                 print(f"Skipping invalid line {i+1}: {row}", file=sys.stderr)
                 continue
             try:
-                start = int(row[0].strip())
-                end = int(row[1].strip())
+                start = float(row[0].strip())
+                end = float(row[1].strip())
             except Exception as e:
                 print(f"Bad times on line {i+1}: {row[:2]} -> {e}", file=sys.stderr)
                 continue
@@ -122,7 +122,7 @@ def generate_html(tasks, out_path):
     # time -> x
     def time_to_x(us):
         rel = (us - global_start) / (global_end - global_start)
-        return left_margin + int(rel * (width_px - left_margin - 40))
+        return left_margin + float(rel * (width_px - left_margin - 40))
 
     # assemble SVG rectangles with data for JS
     svg_items = []
@@ -236,7 +236,7 @@ svg {{ border: 1px solid #ddd; background: #fff; }}
         t_us = global_start + (global_end-global_start)*i/ticks
         x = time_to_x(t_us)
         html_parts.append(f'<line x1="{x}" y1="0" x2="{x}" y2="{header_h-6}" stroke="#eee" />')
-        html_parts.append(f'<text x="{x+3}" y="{header_h-10}" class="time-label">{int(t_us)} μs</text>')
+        html_parts.append(f'<text x="{x+3}" y="{header_h-10}" class="time-label">{float(t_us)} μs</text>')
 
     # draw thread headers and tasks
     for item in svg_items:
