@@ -405,14 +405,9 @@
             // overheads inside parent
             if (Array.isArray(t.overheads)) {
               for (const oh of t.overheads) {
-                const ox = Math.max(t.x, timeToX(oh.start));
-                const ox2 = Math.min(t.x + t.w, timeToX(oh.end));
-                const ow = Math.max(1, ox2 - ox);
-                const ohPadV = Math.max(1, Math.floor(t.h * 0.12));
-                const ohY = t.y + ohPadV;
-                const ohH = Math.max(2, t.h - 2 * ohPadV);
                 mainCtx.fillStyle = CONFIG.OVERHEAD_COLOR;
-                mainCtx.fillRect(ox, ohY, ow, ohH);
+                mainCtx.fillRect(t.x + t.w, t.y, oh.end - oh.start, t.h);
+                
               }
             }
             // draw label if fits

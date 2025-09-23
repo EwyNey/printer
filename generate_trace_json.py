@@ -6,7 +6,7 @@ import os
 import sys
 from collections import defaultdict, namedtuple
 
-Task = namedtuple("Task", ["start", "end", "thread", "args", "color", "idx"])
+Task = namedtuple("Task", ["start", "end", "thread", "args", "overhead_duration_us", "color", "idx"])
 
 def parse_input(path):
     tasks = []
@@ -26,9 +26,19 @@ def parse_input(path):
                 continue
             thread = row[2].strip()
             args = row[3].strip()
+            overhead_duration_us = None
+            if len(row) > 5:
+                rawov = row[5].strip()
+                if rawov != "":
+                    try:
+                        overhead_duration_us = float(rawov)
+                        if overhead_duration_us < 0:
+                            overhead_duration_us = None
+                    except:
+                        overhead_duration_us = None
             color = None
-            if len(row) >= 5:
-                raw = row[4].strip()
+            if len(row) >= 6:
+                raw = row[5].strip()
                 if raw != "":
                     try:
                         color = int(raw)
@@ -40,7 +50,7 @@ def parse_input(path):
                                 color = None
                         else:
                             color = None
-            tasks.append(Task(start, end, thread, args, color, i))
+            tasks.append(Task(start, end, thread, args, overhead_duration_us, color, i))
     return tasks
 
 def export_json(tasks, out_dir):
@@ -56,6 +66,7 @@ def export_json(tasks, out_dir):
             "start": t.start,
             "end": t.end,
             "args": t.args,
+            "overhead_duration_us": t.overhead_duration_us,
             "color": t.color
         })
     data = {
