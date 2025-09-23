@@ -3,7 +3,7 @@ body { font-family: Arial, Helvetica, sans-serif; margin: 8px; }
 .controls .left { display:flex; gap:8px; align-items:center; }
 .controls .right { display:flex; gap:8px; align-items:center; }
 .zoom-label { margin-left:8px; font-size:14px; display:inline-flex; align-items:center; gap:6px; }
-#svg-container { border:1px solid #ddd; background:#fff; overflow:hidden; position:relative; height:800px; }
+#svg-container { border:1px solid #c44343; background:#fff; overflow:hidden; position:relative; height: 100vh; box-sizing: border-box; }
 .thread-label { cursor:pointer; font-weight:bold; font-size:12px; fill:#111; }
 .time-label { font-size:11px; fill:#666; }
 .task-rect { stroke: rgba(0,0,0,0.08); stroke-width:1; rx:3; ry:3; }
