@@ -296,35 +296,119 @@
   // draw ruler
   function drawRuler() {
     const rect = container.getBoundingClientRect();
-    const w = rect.width;
+    const canvasW = rect.width;
     const h = CONFIG.header_h;
-    rulerCtx.clearRect(0,0,w,h);
+
+    rulerCtx.clearRect(0, 0, canvasW, h);
+    // фон
     rulerCtx.fillStyle = '#fff';
-    rulerCtx.fillRect(0,0,w,h);
-    const ticks = 8;
-    rulerCtx.fillStyle = '#666';
-    rulerCtx.textBaseline = 'middle';
-    rulerCtx.font = '11px Arial';
-    for (let i=0;i<=ticks;i++){
-      const t_us = global_start + (global_end - global_start) * i / ticks;
-      const xContent = timeToX(t_us);
-      const x = xContent * scale + panX;
-      rulerCtx.beginPath();
-      rulerCtx.moveTo(x, h-1);
-      rulerCtx.lineTo(x, 6);
-      rulerCtx.strokeStyle = '#eee';
-      rulerCtx.stroke();
-      rulerCtx.fillStyle = '#666';
-      rulerCtx.fillText(Math.round(t_us) + ' μs', x+3, h-10);
-    }
-    const vp = container.getBoundingClientRect();
+    rulerCtx.fillRect(0, 0, canvasW, h);
+
+    // --- вычислим видимый временной диапазон (в тех же единицах, что и start/end) ---
+    // contentX = (screenX - panX) / scale
     const leftContentX = Math.max(0, (-panX) / scale);
-    const rightContentX = Math.min(CONFIG.width_px, (vp.width - panX) / scale);
+    const rightContentX = Math.min(CONFIG.width_px, (canvasW - panX) / scale);
+    // преобразуем contentX (координаты) в время (us)
+    const leftTime = xToTime(leftContentX);
+    const rightTime = xToTime(rightContentX);
+    const visibleTimeSpan = Math.max(1e-12, rightTime - leftTime); // guard
+
+    // --- выберем "красивый" шаг по времени (1-2-5 × 10^n) так, чтобы он занимал примерно targetPxPerTick пикселей ---
+    const targetPxPerTick = 110; // целевой пиксель между тиками (поменяйте при желании)
+    // видимый пиксельный диапазон = canvasW
+    const pxPerUs = ( (timeToX(leftTime + 1) - timeToX(leftTime)) ); // content x per 1us (в контентных координатах)
+    // Но проще: pxPerUs в экранных пикселях = scale * (usable / timeSpan_global)
+    const usable = (CONFIG.width_px - CONFIG.left_margin - 40);
+    const pxPerUsScreen = (usable / (global_end - global_start)) * scale;
+
+    // искомый шаг по времени:
+    const approxStepUs = Math.max(1e-12, (targetPxPerTick / Math.max(1e-12, pxPerUsScreen)));
+    // нормализуем approxStepUs до ближайшего вида 1,2,5 × 10^n
+    function niceStep(value) {
+      const pow = Math.pow(10, Math.floor(Math.log10(value)));
+      const d = value / pow;
+      if (d <= 1) return pow;
+      if (d <= 2) return 2 * pow;
+      if (d <= 5) return 5 * pow;
+      return 10 * pow;
+    }
+    const stepUs = niceStep(approxStepUs);
+
+    // --- вычислим первый и последний тик (время) ---
+    const firstTick = Math.floor(leftTime / stepUs) * stepUs;
+    // количество тиков, чтобы не рисовать гигантское число
+    const maxTicks = Math.ceil( (rightTime - firstTick) / stepUs ) + 2;
+    // ограничение тиков (защитное)
+    const HARD_MAX_TICKS = 2000;
+    const ticksToRender = Math.min(maxTicks, HARD_MAX_TICKS);
+
+    // отрисовка тиков и меток
+    rulerCtx.fillStyle = '#333';
+    rulerCtx.textBaseline = 'top';
+    rulerCtx.font = '11px Arial';
+
+    // линия основания
+    rulerCtx.strokeStyle = '#ccc';
+    rulerCtx.beginPath();
+    rulerCtx.moveTo(0, h - 1);
+    rulerCtx.lineTo(canvasW, h - 1);
+    rulerCtx.stroke();
+
+    // вспомогательная функция форматирования времени (поддерживает дробные значения)
+    function formatTimeLabel(t) {
+      // выбираем точность в зависимости от размера шага
+      // если шаг < 1 -> показать 3 знака, если <0.001 -> показать больше и т.д.
+      const absStep = Math.abs(stepUs);
+      if (absStep >= 1) {
+        // целые микросекунды
+        if (Math.abs(t - Math.round(t)) < 1e-9) return String(Math.round(t)) + ' μs';
+        return Number(t.toFixed(3)).toString() + ' μs';
+      } else {
+        // дробные: выберем количество знаков нужное для отражения шага
+        const digits = Math.min(6, Math.max(0, Math.ceil(-Math.log10(absStep)) + 1));
+        return Number(t.toFixed(digits)).toString() + ' μs';
+      }
+    }
+
+    // рисуем тики
+    for (let i = 0; i < ticksToRender; ++i) {
+      const timeUs = firstTick + i * stepUs;
+      if (timeUs < leftTime - 1e-12) continue;
+      if (timeUs > rightTime + 1e-12) break;
+      // position on screen: contentX -> screenX
+      const contentX = timeToX(timeUs);
+      const screenX = contentX * scale + panX;
+      // skip if offscreen (safety)
+      if (screenX < -50 || screenX > canvasW + 50) continue;
+
+      // tick line (minor/major: make every 5th/10th a longer tick)
+      const major = Math.abs((i % 5)) < 1e-9; // every 5 ticks major
+      const tickHeight = major ? 12 : 6;
+      rulerCtx.beginPath();
+      rulerCtx.moveTo(screenX + 0.5, h - 1);
+      rulerCtx.lineTo(screenX + 0.5, h - 1 - tickHeight);
+      rulerCtx.strokeStyle = major ? '#888' : '#bbb';
+      rulerCtx.stroke();
+
+      // label for major ticks — avoid overlap: measure and skip if too close to previous label
+      if (major) {
+        const label = formatTimeLabel(timeUs);
+        const textW = rulerCtx.measureText(label).width;
+        // ensure label not drawn outside canvas
+        let tx = screenX + 3;
+        if (tx + textW > canvasW - 4) tx = canvasW - 4 - textW;
+        if (tx < 2) tx = 2;
+        rulerCtx.fillStyle = '#333';
+        rulerCtx.fillText(label, tx, 6);
+      }
+    }
+
+    // draw highlight of visible content in ruler (semi-transparent)
     const contentToScreen = (cx) => cx * scale + panX;
     const pxLeft = contentToScreen(leftContentX);
     const pxRight = contentToScreen(rightContentX);
     rulerCtx.fillStyle = 'rgba(100,150,250,0.12)';
-    rulerCtx.fillRect(pxLeft, 2, Math.max(1, pxRight - pxLeft), Math.max(4, h-8));
+    rulerCtx.fillRect(pxLeft, 2, Math.max(1, pxRight - pxLeft), Math.max(4, h - 8));
   }
 
   // draw main: thread bands + tasks or density sparkline when collapsed
