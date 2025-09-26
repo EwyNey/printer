@@ -1,0 +1,93 @@
+:root{
+  --controls-h: 56px;
+  --bg: #ffffff;
+  --border: #e6e6e6;
+  --tooltip-bg: rgba(0,0,0,0.8);
+  --tooltip-color: #fff;
+}
+
+/* page layout */
+html,body { height:100%; margin:0; font-family: Arial, Helvetica, sans-serif; background:#fafafa; color:#111; }
+.topbar {
+  height: var(--controls-h);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:8px 12px;
+  box-sizing:border-box;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(#fff,#fbfbfb);
+}
+.topbar .controls-left, .topbar .controls-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.topbar label { font-size:13px; display:inline-flex; align-items:center; gap:6px; }
+
+/* main container */
+#svg-container { 
+    border:1px solid #c44343; 
+    background:#fff; 
+    overflow:hidden; 
+    position:relative; 
+    height: 100vh; 
+    width: 100%;
+    box-sizing: border-box; 
+}
+
+/* mainCanvas fills container */
+#mainCanvas {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: transparent;
+}
+
+/* overlays (ruler / minimap) */
+.overlay {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+}
+
+/* ruler - top */
+#rulerCanvas {
+  left: 0; top: 0;
+  width: 100%;
+  height: 48px;
+  pointer-events: none;
+  z-index: 40;
+}
+
+/* minimap style - default bottom-right */
+#minimap {
+  width: 420px;
+  height: 120px;
+  pointer-events: auto;
+  right: 12px;
+  bottom: 12px;
+  position: absolute;
+  z-index: 100;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  cursor: pointer;
+}
+
+/* tooltip */
+.tooltip {
+  position: absolute;
+  z-index: 200;
+  pointer-events: none;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-color);
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: pre;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* basic buttons */
+button { padding:6px 8px; font-size:13px; cursor:pointer; }
+input[type=range] { vertical-align: middle; }

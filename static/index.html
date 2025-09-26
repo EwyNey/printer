@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Timeline — High Performance Viewer</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="controls-left">
+      <button id="btnZoomIn">+</button>
+      <button id="btnZoomOut">−</button>
+      <button id="btnReset">Reset</button>
+      <button id="btnFit">Fit</button>
+      <label>Масштаб
+        <input id="zoomSlider" type="range" min="0.05" max="10" step="0.01" value="1">
+        <span id="zoomValue">1.00×</span>
+      </label>
+      <label>Горизонталь
+        <input id="panXSlider" type="range" min="0" max="0" step="1" value="0" />
+        <span id="panXValue">0 px</span>
+      </label>
+    </div>
+
+    <div class="controls-right">
+      <button id="btnCollapseAll">Свернуть все</button>
+      <button id="btnExpandAll">Развернуть все</button>
+      <input id="fileInput" type="file" accept=".json,.trace,.txt,.csv" />
+    </div>
+  </div>
+
+  <div id="svg-container">
+    <canvas id="mainCanvas"></canvas>
+    <canvas id="rulerCanvas" class="overlay"></canvas>
+    <canvas id="minimap" class="overlay"></canvas>
+    <div id="tooltip" class="tooltip" style="display:none"></div>
+  </div>
+
+<script src="renderer.js"></script>
+</body>
+</html>
