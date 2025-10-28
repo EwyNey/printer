@@ -13,3 +13,10 @@ Input format:
 
 Output:
     HTML file with embedded SVG timeline and simple JS controls to collapse/expand threads.
+
+
+
+How to run (important):
+$ python generate_trace_json.py input.csv static
+$ cd static
+$ python -m http.server 8000
